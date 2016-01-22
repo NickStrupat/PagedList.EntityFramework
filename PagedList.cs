@@ -31,7 +31,8 @@ namespace PagedList.EntityFramework {
 			LastItemOnPage = num > TotalItemCount ? TotalItemCount : num;
 			if (superset == null || TotalItemCount <= 0)
 				return;
-			Subset.AddRange(pageNumber == 1 ? await superset.Skip(0).Take(pageSize).ToListAsync() : await superset.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync());
+			var skipCount = pageNumber == 1 ? 0 : (pageNumber - 1) * pageSize;
+			Subset.AddRange(await superset.Skip(skipCount).Take(pageSize).ToListAsync());
 		}
 	}
 }
