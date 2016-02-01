@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 
 namespace PagedList.EntityFramework {
 	public static class PagedListExtensions {
+
 		/// <summary>
 		/// Creates a subset of this collection of objects that can be individually accessed by index and containing metadata about the collection of objects the subset was created from.
 		/// </summary>
@@ -13,8 +14,9 @@ namespace PagedList.EntityFramework {
 		/// <param name="pageSize">The maximum size of any individual subset.</param>
 		/// <returns>A subset of this collection of objects that can be individually accessed by index and containing metadata about the collection of objects the subset was created from.</returns>
 		/// <seealso cref="PagedList{T}"/>
-		public static async Task<IPagedList<T>> ToPagedListAsync<T>(this IQueryable<T> superset, Int32 pageNumber, Int32 pageSize) {
-			return await PagedList<T>.Create(superset, pageNumber, pageSize);
+		public static Task<IPagedList<T>> ToPagedListForEntityFrameworkAsync<T>(this IQueryable<T> superset, int pageNumber, int pageSize) {
+            // changed method name, because X.PagedList has its own ToPagedListAsync extensions that has nothing to do with EF.
+            return PagedList<T>.Create(superset, pageNumber, pageSize);
 		}
 	}
 }
