@@ -9,16 +9,19 @@ namespace PagedList.EntityFramework {
 
 		public static async Task<IPagedList<T>> Create(IQueryable<T> superset, int pageNumber, int pageSize) {
 			var list = new PagedList<T>();
-			await list.Init(superset, pageNumber, pageSize);
+			await list.Init(superset, pageNumber, pageSize).ConfigureAwait(false);
 			return list;
 		}
 
-		private async Task Init(IQueryable<T> superset, int pageNumber, int pageSize) {
+		private async Task Init(IQueryable<T> superset, int pageNumber, int pageSize)
+        {
 			if (pageNumber < 1)
 				throw new ArgumentOutOfRangeException(Name.Of(pageNumber), pageNumber, "PageNumber cannot be below 1.");
-			if (pageSize < 1)
+
+            if (pageSize < 1)
 				throw new ArgumentOutOfRangeException(Name.Of(pageSize), pageSize, "PageSize cannot be less than 1.");
-			TotalItemCount = superset == null ? 0 : await superset.CountAsync();
+
+			TotalItemCount = superset == null ? 0 : await superset.CountAsync().ConfigureAwait(false);
 			PageSize = pageSize;
 			PageNumber = pageNumber;
 			PageCount = TotalItemCount > 0 ? (int)Math.Ceiling(TotalItemCount / (double)PageSize) : 0;
@@ -29,10 +32,15 @@ namespace PagedList.EntityFramework {
 			FirstItemOnPage = (PageNumber - 1) * PageSize + 1;
 			var num = FirstItemOnPage + PageSize - 1;
 			LastItemOnPage = num > TotalItemCount ? TotalItemCount : num;
-			if (superset == null || TotalItemCount <= 0)
+
+            if (superset == null || TotalItemCount <= 0)
 				return;
+
 			var skipCount = pageNumber == 1 ? 0 : (pageNumber - 1) * pageSize;
-			Subset.AddRange(await superset.Skip(skipCount).Take(pageSize).ToListAsync());
+		    var query = superset.Skip(skipCount).Take(pageSize);
+            // because X.PagedList has its own ToListAsync extensions now, must force the EF implementation here. 
+            var efList = await System.Data.Entity.QueryableExtensions.ToListAsync(query).ConfigureAwait(false);
+		    this.Subset.AddRange(efList);
 		}
 	}
 }
